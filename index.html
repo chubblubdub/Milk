@@ -85,7 +85,7 @@
           <p>that's about ${totalOz} oz</p>
           <p>🎯 ${comparison}</p>
           <p>🗓️ tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
-          <p>📈 average per day: ${average} oz, ${(average/128).toFixed(2)} gallons</p>
+          <p>📈 average per day: <span style="color: #6495ed;">128 oz${average} oz, ${(average/128).toFixed(2)} gallons</span> </p>
           <p>🆕 latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
         `;
       } catch (e) {
