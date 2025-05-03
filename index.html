@@ -1,17 +1,34 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Shortcut Trigger</title>
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const key = params.get("key");
-
-      if (key === "abc123") {
-        document.write("Yayy great job :)");
-      } else {
-        document.write("Invalid key.");
+    <title>milk parser</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        padding-top: 50px;
+        font-size: 2em;
       }
+    </style>
+    <script>
+      window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const key = params.get("key");
+
+        if (key && key.startsWith("milk")) {
+          const number = key.slice(4); // get everything after "milk"
+          if (!isNaN(number)) {
+            document.body.innerText = number;
+          } else {
+            document.body.innerText = "no valid number after 'milk'";
+          }
+        } else {
+          document.body.innerText = "missing or invalid key";
+        }
+      };
     </script>
   </head>
-  <body></body>
+  <body>
+    waiting for input...
+  </body>
 </html>
