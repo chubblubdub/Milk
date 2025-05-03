@@ -95,7 +95,7 @@
         });
 
         const daysSpan = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
-        const average = (totalOz / daysSpan).toFixed(2);
+        const average = (totalOz / daysSpan);
         const gallons = (totalOz / 128).toFixed(2);
         const comparison = getRandomComparison(gallons);
         const lastEntry = milkData[milkData.length - 1];
