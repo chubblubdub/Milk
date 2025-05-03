@@ -31,7 +31,7 @@
     <p>Loading your calcium journey... 🐄🥛</p>
   </div>
 
-  <footer style="margin-top: 10px; color: #808080; font-size: 1em;">
+  <footer style="margin-top: 10px; color: #808080; font-size: 0.5em;">
     <p>made by canon</p>
   </footer>
 
@@ -104,9 +104,9 @@
           <h2>🥛 total milk: <span id="milk-total">${gallons}</span> gallons</h2>
           <p>that's about ${totalOz} oz</p>
           <p>${comparison}</p>
-          <p>🗓️ tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
-          <p>📈 average per day: <span style="color: #6495ed;">${average} oz, ${(average/128).toFixed(2)} gallons</span> </p>
-          <p>🆕 latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
+          <p>tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
+          <p>average per day: <span style="color: #6495ed;">${average} oz, ${(average/128).toFixed(2)} gallons</span> </p>
+          <p>latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
         `;
       } catch (e) {
         document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
