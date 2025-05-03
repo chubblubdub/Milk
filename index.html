@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Milk Tracker</title>
   <link rel="icon" type="image/png" href="milkFavicon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans:wght@400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     #milk-total {
@@ -27,6 +27,8 @@
     #milkChart {
       max-width: 600px;
       margin: 20px auto;
+      font-family: 'Cal Sans', sans-serif;
+      font-weight: 400;
     }
   </style>
 </head>
@@ -75,12 +77,12 @@
     function getRandomComparison(gallons, totalOz) {
       const comparisons = [
         `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
-        `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🧊`,
+        `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🫒`,
         `${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
-        `${(gallons / 17.44).toFixed(3)} humans by weight 🧍‍♂️`,
+        `${(gallons / 17.44).toFixed(3)} humans by weight 🧕‍♂️`,
         `${(gallons / 110).toFixed(3)}% of cow's lifetime production 🐄`,
         `capacity of ${(totalOz / 50).toFixed(0)} human stomachs 🫃`,
-        `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🏗️`,
+        `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🖗`,
         `$${(gallons*4.85).toFixed(2)} worth at Fareway 🛒`
       ];
       return comparisons[Math.floor(Math.random() * comparisons.length)];
@@ -96,7 +98,6 @@
         const milkData = JSON.parse(atob(data));
         if (!Array.isArray(milkData) || milkData.length === 0) throw new Error();
 
-        // Sort by date
         milkData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         let totalOz = 0;
@@ -129,18 +130,17 @@
           <p>latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
         `;
 
-        // Draw chart
         new Chart(document.getElementById('milkChart'), {
           type: 'line',
           data: {
             labels: labels,
             datasets: [{
-              label: 'Milk per Day (oz)',
+              label: 'Daily Milk Intake (oz)',
               data: dataPoints,
               borderColor: '#6495ed',
               backgroundColor: 'rgba(100,149,237,0.2)',
               borderWidth: 2,
-              pointRadius: 4,
+              pointRadius: 2,
               tension: 0.3
             }]
           },
