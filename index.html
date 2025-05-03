@@ -1,34 +1,66 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>milk parser</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        text-align: center;
-        padding-top: 50px;
-        font-size: 2em;
-      }
-    </style>
-    <script>
-      window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        const key = params.get("key");
+<head>
+  <title>milk tracker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+    }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>milk tracker</h1>
+  <div id="output">loading...</div>
 
-        if (key && key.startsWith("milk")) {
-          const number = key.slice(4); // get everything after "milk"
-          if (!isNaN(number)) {
-            document.body.innerText = number;
-          } else {
-            document.body.innerText = "no valid number after 'milk'";
-          }
-        } else {
-          document.body.innerText = "missing or invalid key";
+  <script>
+    function decodeBase64(base64) {
+      try {
+        return decodeURIComponent(atob(base64).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function summarizeMilk(data) {
+      if (!Array.isArray(data)) return "invalid format";
+
+      const totalOz = data.reduce((sum, entry) => sum + Number(entry.oz || 0), 0);
+      const dates = [...new Set(data.map(entry => entry.date))];
+      const average = dates.length ? (totalOz / dates.length).toFixed(2) : 0;
+      const latest = data[data.length - 1];
+
+      return `
+        <p><strong>Total Milk:</strong> ${totalOz} oz</p>
+        <p><strong>Days Recorded:</strong> ${dates.length}</p>
+        <p><strong>Average per Day:</strong> ${average} oz</p>
+        <p><strong>Last Entry:</strong> ${latest.date || "unknown"} (${latest.oz} oz)</p>
+      `;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const rawData = params.get("data");
+    const output = document.getElementById("output");
+
+    if (!rawData) {
+      output.innerHTML = "<p class='error'>no data provided</p>";
+    } else {
+      const jsonStr = decodeBase64(rawData);
+      if (!jsonStr) {
+        output.innerHTML = "<p class='error'>invalid base64</p>";
+      } else {
+        try {
+          const json = JSON.parse(jsonStr);
+          output.innerHTML = summarizeMilk(json);
+        } catch (e) {
+          output.innerHTML = "<p class='error'>invalid json</p>";
         }
-      };
-    </script>
-  </head>
-  <body>
-    waiting for input...
-  </body>
+      }
+    }
+  </script>
+</body>
 </html>
