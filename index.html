@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Milk Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <style>
+    #milk-total {
+      font-size: 1.5em;
+      font-weight: bold;
+      padding: 0 4px;
+    }
+
+    body.light #milk-total {
+      color: black;
+      text-shadow: 1px 1px 0 white, -1px 1px 0 white, 1px -1px 0 white, -1px -1px 0 white;
+    }
+
+    body.dark #milk-total {
+      color: white;
+      text-shadow: 1px 1px 0 black, -1px 1px 0 black, 1px -1px 0 black, -1px -1px 0 black;
+    }
+  </style>
 </head>
 <body style="font-family: 'Cal Sans', sans-serif; text-align: center; padding: 20px; color: #333; background-color: #f0f8ff;">
 
@@ -21,6 +38,9 @@
   <script>
     function applyDarkModeStyles(isDarkMode) {
       const header = document.getElementById('main-header');
+      document.body.classList.remove('light', 'dark');
+      document.body.classList.add(isDarkMode ? 'dark' : 'light');
+
       if (isDarkMode) {
         document.body.style.backgroundColor = '#000';
         document.body.style.color = '#f0f8ff';
@@ -81,7 +101,7 @@
         const lastEntry = milkData[milkData.length - 1];
 
         document.getElementById('output').innerHTML = `
-          <h2>🥛 total milk: ${gallons} gallons</h2>
+          <h2>🥛 total milk: <span id="milk-total">${gallons}</span> gallons</h2>
           <p>that's about ${totalOz} oz</p>
           <p>${comparison}</p>
           <p>🗓️ tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
@@ -98,14 +118,14 @@
   </script>
 
   <div style="
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 0;
-">
-  <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Border" style="width: 100%; height: auto;" />
-</div>
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 0;
+  ">
+    <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Border" style="width: 100%; height: auto;" />
+  </div>
 
 </body>
 </html>
