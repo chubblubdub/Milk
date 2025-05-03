@@ -102,7 +102,7 @@
 
         document.getElementById('output').innerHTML = `
           <h2>🥛 total milk: <span id="milk-total">${gallons}</span> gallons</h2>
-          <p>that's about ${totalOz} oz</p>
+          <p>that's about ${totalOz} oz,<span style="color: #c30f16;"> OR</span></p>
           <p>${comparison}</p>
           <p>tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
           <p>average per day: <span style="color: #6495ed;">${average} oz, ${(average/128).toFixed(2)} gallons</span> </p>
