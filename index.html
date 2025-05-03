@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Milk Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     #milk-total {
       font-size: 1.5em;
@@ -21,6 +22,11 @@
       color: white;
       text-shadow: 1px 1px 0 black, -1px 1px 0 black, 1px -1px 0 black, -1px -1px 0 black;
     }
+
+    #milkChart {
+      max-width: 600px;
+      margin: 20px auto;
+    }
   </style>
 </head>
 <body style="font-family: 'Cal Sans', sans-serif; text-align: center; padding: 20px; color: #333; background-color: #f0f8ff;">
@@ -30,6 +36,8 @@
   <div id="output">
     <p>Loading your calcium journey... 🐄🥛</p>
   </div>
+
+  <canvas id="milkChart"></canvas>
 
   <footer style="margin-top: 10px; color: #808080; font-size: 1em;">
     <p>made by canon</p>
@@ -87,13 +95,20 @@
         const milkData = JSON.parse(atob(data));
         if (!Array.isArray(milkData) || milkData.length === 0) throw new Error();
 
+        // Sort by date
+        milkData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
         let totalOz = 0;
         let earliest = new Date(milkData[0].date);
         let latest = new Date(milkData[0].date);
+        const labels = [];
+        const dataPoints = [];
 
         milkData.forEach(entry => {
-          totalOz += entry.oz;
           const entryDate = new Date(entry.date);
+          labels.push(entryDate.toISOString().split('T')[0]);
+          dataPoints.push(entry.oz);
+          totalOz += entry.oz;
           if (entryDate < earliest) earliest = entryDate;
           if (entryDate > latest) latest = entryDate;
         });
@@ -112,6 +127,40 @@
           <p>average per day: <span style="color: #6495ed;">${average.toFixed(2)} oz, ${(average/128).toFixed(2)} gallons</span></p>
           <p>latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
         `;
+
+        // Draw chart
+        new Chart(document.getElementById('milkChart'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Milk per Day (oz)',
+              data: dataPoints,
+              borderColor: '#6495ed',
+              backgroundColor: 'rgba(100,149,237,0.2)',
+              borderWidth: 2,
+              pointRadius: 4,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Ounces' }
+              },
+              x: {
+                title: { display: true, text: 'Date' }
+              }
+            },
+            plugins: {
+              legend: { display: true },
+              tooltip: { enabled: true }
+            }
+          }
+        });
+
       } catch (e) {
         document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
       }
