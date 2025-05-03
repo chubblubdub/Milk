@@ -1,83 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milk Tracker</title>
-    <!-- Add the Google Font link -->
-    <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Milk Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
 </head>
-<body style="font-family: 'Cal Sans', sans-serif; text-align: center; padding: 20px; color: #333;">
+<body style="font-family: 'Cal Sans', sans-serif; text-align: center; padding: 20px; color: #333; background-color: #f0f8ff;">
 
-    <h1 style="font-size: 2.5em; color: #6495ed;">🥛 Milk Tracker 🐄</h1>
-    
-    <div id="output">
-        <p>Loading... 🐄🥛</p>
-    </div>
+  <h1 id="main-header" style="font-size: 2.5em; color: #6495ed;">🥛 Milk Tracker 🐄</h1>
 
-    <footer style="margin-top: 20px; font-size: 1.2em;">
-        <p>Made with ❤️ and 🐄 by chubblubdub</p>
-    </footer>
+  <div id="output">
+    <p>Loading your calcium journey... 🐄🥛</p>
+  </div>
 
-    <script>
-        // Function to detect dark mode and adjust styles accordingly
-        function applyDarkModeStyles(isDarkMode) {
-            if (isDarkMode) {
-                document.body.style.backgroundColor = '#000000';
-                document.body.style.color = '#f0f8ff';
-                document.querySelector('h1').style.color = '#6495ed'; // Keep header color nice
-            } else {
-                document.body.style.backgroundColor = '#f0f8ff';
-                document.body.style.color = '#333';
-            }
-        }
+  <footer style="margin-top: 20px; font-size: 1.2em;">
+    <p>made with ❤️ and 🐄 by chub</p>
+  </footer>
 
-        // Check if the system is using dark mode
-        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyDarkModeStyles(isDarkMode);
+  <script>
+    function applyDarkModeStyles(isDarkMode) {
+      const header = document.getElementById('main-header');
+      if (isDarkMode) {
+        document.body.style.backgroundColor = '#000';
+        document.body.style.color = '#f0f8ff';
+        header.style.color = '#6495ed';
+      } else {
+        document.body.style.backgroundColor = '#f0f8ff';
+        document.body.style.color = '#333';
+        header.style.color = '#6495ed';
+      }
+    }
 
-        // Listen for changes in the system's color scheme preference
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            applyDarkModeStyles(e.matches);
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyDarkModeStyles(isDarkMode);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      applyDarkModeStyles(e.matches);
+    });
+
+    function parseQueryString(url) {
+      const params = new URLSearchParams(url.split('?')[1]);
+      return params.get('data');
+    }
+
+    function getRandomComparison(gallons) {
+      const comparisons = [
+        `enough milk to float a hamster-sized yacht 🐹⛵`,
+        `${(gallons * 37.9).toFixed(1)} bottles of ranch dressing 🥗`,
+        `roughly ${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
+        `the weight of a baby cow (probably) 🐄`,
+        `${(gallons * 7).toFixed(2)} milk jugs in freedom units 🇺🇸🥛`,
+        `${(gallons * 2.1).toFixed(1)} adult cats full of milk (don't ask) 🐱`,
+        `enough to make a cheese wheel the size of a tire 🧀🚗`
+      ];
+      return comparisons[Math.floor(Math.random() * comparisons.length)];
+    }
+
+    function updatePageContent(data) {
+      if (!data) {
+        document.getElementById('output').innerHTML = '<p>Invalid data format 🐄😕</p>';
+        return;
+      }
+
+      try {
+        const milkData = JSON.parse(atob(data));
+        if (!Array.isArray(milkData) || milkData.length === 0) throw new Error();
+
+        let totalOz = 0;
+        let earliest = new Date(milkData[0].date);
+        let latest = new Date(milkData[0].date);
+
+        milkData.forEach(entry => {
+          totalOz += entry.oz;
+          const entryDate = new Date(entry.date);
+          if (entryDate < earliest) earliest = entryDate;
+          if (entryDate > latest) latest = entryDate;
         });
 
-        function parseQueryString(url) {
-            const params = new URLSearchParams(url.split('?')[1]);
-            return params.get('data');
-        }
+        const daysSpan = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
+        const average = (totalOz / daysSpan).toFixed(2);
+        const gallons = (totalOz / 128).toFixed(2);
+        const comparison = getRandomComparison(gallons);
+        const lastEntry = milkData[milkData.length - 1];
 
-        function updatePageContent(data) {
-            if (!data) {
-                document.getElementById('output').innerHTML = '<p>Invalid data format 🐄😕</p>';
-                return;
-            }
+        document.getElementById('output').innerHTML = `
+          <h2>🥛 total milk: ${totalOz} oz</h2>
+          <p>🧪 that's about ${gallons} gallons</p>
+          <p>🎯 ${comparison}</p>
+          <p>🗓️ tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
+          <p>📈 average per day: ${average} oz</p>
+          <p>🆕 latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
+        `;
+      } catch (e) {
+        document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
+      }
+    }
 
-            try {
-                const milkData = JSON.parse(atob(data));
-                let totalMilk = 0;
-                let daysRecorded = milkData.length;
-                let lastEntry = milkData[milkData.length - 1];
-
-                milkData.forEach(entry => {
-                    totalMilk += entry.oz;
-                });
-
-                let averagePerDay = (totalMilk / daysRecorded).toFixed(2);
-
-                document.getElementById('output').innerHTML = `
-                    <h2>🥛 Total Milk: ${totalMilk} oz 🐄</h2>
-                    <p>📝 Days Recorded: ${daysRecorded}</p>
-                    <p>📊 Average per Day: ${averagePerDay} oz</p>
-                    <p>🗓️ Last Entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
-                `;
-            } catch (e) {
-                document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
-            }
-        }
-
-        const data = parseQueryString(window.location.href);
-        updatePageContent(data);
-    </script>
+    const data = parseQueryString(window.location.href);
+    updatePageContent(data);
+  </script>
 
 </body>
 </html>
