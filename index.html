@@ -1,66 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>milk tracker</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2em;
-    }
-    .error { color: red; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk Tracker</title>
 </head>
-<body>
-  <h1>milk tracker</h1>
-  <div id="output">loading...</div>
+<body style="font-family: Arial, sans-serif; text-align: center; background-color: #f0f8ff; padding: 20px; color: #333;">
 
-  <script>
-    function decodeBase64(base64) {
-      try {
-        return decodeURIComponent(atob(base64).split('').map(c =>
-          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join(''));
-      } catch (e) {
-        return null;
-      }
-    }
+    <h1 style="font-size: 2.5em; color: #8e44ad;">🥛 Milk Tracker 🐄</h1>
+    
+    <div id="output">
+        <p>Loading... 🐄🥛</p>
+    </div>
 
-    function summarizeMilk(data) {
-      if (!Array.isArray(data)) return "invalid format";
+    <footer style="margin-top: 20px; font-size: 1.2em;">
+        <p>Made with ❤️ and 🐄 by Chub 🐄</p>
+    </footer>
 
-      const totalOz = data.reduce((sum, entry) => sum + Number(entry.oz || 0), 0);
-      const dates = [...new Set(data.map(entry => entry.date))];
-      const average = dates.length ? (totalOz / dates.length).toFixed(2) : 0;
-      const latest = data[data.length - 1];
-
-      return `
-        <p><strong>Total Milk:</strong> ${totalOz} oz</p>
-        <p><strong>Days Recorded:</strong> ${dates.length}</p>
-        <p><strong>Average per Day:</strong> ${average} oz</p>
-        <p><strong>Last Entry:</strong> ${latest.date || "unknown"} (${latest.oz} oz)</p>
-      `;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const rawData = params.get("data");
-    const output = document.getElementById("output");
-
-    if (!rawData) {
-      output.innerHTML = "<p class='error'>no data provided</p>";
-    } else {
-      const jsonStr = decodeBase64(rawData);
-      if (!jsonStr) {
-        output.innerHTML = "<p class='error'>invalid base64</p>";
-      } else {
-        try {
-          const json = JSON.parse(jsonStr);
-          output.innerHTML = summarizeMilk(json);
-        } catch (e) {
-          output.innerHTML = "<p class='error'>invalid json</p>";
+    <script>
+        function parseQueryString(url) {
+            const params = new URLSearchParams(url.split('?')[1]);
+            return params.get('data');
         }
-      }
-    }
-  </script>
+
+        function updatePageContent(data) {
+            if (!data) {
+                document.getElementById('output').innerHTML = '<p>Invalid data format 🐄😕</p>';
+                return;
+            }
+
+            try {
+                const milkData = JSON.parse(atob(data));
+                let totalMilk = 0;
+                let daysRecorded = milkData.length;
+                let lastEntry = milkData[milkData.length - 1];
+
+                milkData.forEach(entry => {
+                    totalMilk += entry.oz;
+                });
+
+                let averagePerDay = (totalMilk / daysRecorded).toFixed(2);
+
+                document.getElementById('output').innerHTML = `
+                    <h2>🥛 Total Milk: ${totalMilk} oz 🐄</h2>
+                    <p>📝 Days Recorded: ${daysRecorded}</p>
+                    <p>📊 Average per Day: ${averagePerDay} oz</p>
+                    <p>🗓️ Last Entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
+                `;
+            } catch (e) {
+                document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
+            }
+        }
+
+        const data = parseQueryString(window.location.href);
+        updatePageContent(data);
+    </script>
+
 </body>
 </html>
