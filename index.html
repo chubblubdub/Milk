@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Shortcut Trigger</title>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get("key");
+
+      if (key === "abc123") {
+        window.location.href = "https://example.com/unlocked-page";
+      } else {
+        document.write("Invalid key.");
+      }
+    </script>
+  </head>
+  <body></body>
+</html>
