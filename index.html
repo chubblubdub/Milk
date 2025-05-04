@@ -47,7 +47,7 @@
 </head>
 <body style="text-align: center; padding: 20px; color: #333; background-color: #f0f8ff;">
 
-  <h1 id="main-header" style="font-size: 2.5em; color: #6495ed;">🥛 MILK TRACKER🐄</h1>
+  <h1 id="main-header" style="font-size: 3.5em; color: #6495ed;">🥛MILK TRACKER🐄</h1>
 
   <div id="output">
     <p>Loading your calcium journey... 🐄🥛</p>
@@ -135,7 +135,7 @@
         const lastEntry = milkData[milkData.length - 1];
 
         document.getElementById('output').innerHTML = `
-          <h2>🥛 total milk: <span id="milk-total">${gallons}</span> gallons</h2>
+          <h2>total milk: <span id="milk-total">${gallons}</span> gallons</h2>
           <p>that's about ${totalOz} oz,<span style="color: #c30f16;"> OR</span></p>
           <p>${comparison}</p>
           <p>tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
@@ -161,7 +161,7 @@
             responsive: true,
             scales: {
               y: {
-                beginAtZero: true,
+                beginAtZero: false,
                 title: { display: true, text: 'Ounces' }
               },
               x: {
@@ -169,7 +169,7 @@
               }
             },
             plugins: {
-              legend: { display: true },
+              legend: { display: false },
               tooltip: { enabled: true }
             }
           }
