@@ -40,9 +40,8 @@
     }
 
     #output {
-      font-size: 0.65em; /* change this value to make text smaller or larger */
+      font-size: 0.65em;
     }
-    
   </style>
 </head>
 <body style="text-align: center; padding: 20px; color: #333; background-color: #f0f8ff;">
@@ -87,6 +86,10 @@
       return params.get('data');
     }
 
+    function formatDatePretty(date) {
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
     function getRandomComparison(gallons, totalOz) {
       const comparisons = [
         `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
@@ -117,39 +120,43 @@
         let earliest = new Date(milkData[0].date);
         let latest = new Date(milkData[0].date);
         const labels = [];
-        const dataPoints = [];
+        const cumulative = [];
 
-        milkData.forEach(entry => {
+        milkData.forEach((entry, index) => {
           const entryDate = new Date(entry.date);
-          labels.push(entryDate.toISOString().split('T')[0]);
-          dataPoints.push(entry.oz);
           totalOz += entry.oz;
+          cumulative.push(totalOz);
+          labels.push(entryDate);
           if (entryDate < earliest) earliest = entryDate;
           if (entryDate > latest) latest = entryDate;
         });
 
-        const daysSpan = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
-        const average = (totalOz / daysSpan);
+        const totalDays = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
+        const average = (totalOz / totalDays);
         const gallons = (totalOz / 128).toFixed(2);
         const comparison = getRandomComparison(gallons, totalOz);
         const lastEntry = milkData[milkData.length - 1];
+
+        const gallonPerDay = average / 128;
+        const daysPerGallon = gallonPerDay > 0 ? (1 / gallonPerDay).toFixed(1) : "∞";
 
         document.getElementById('output').innerHTML = `
           <h2>total milk: <span id="milk-total">${gallons}</span> gallons</h2>
           <p>that's about ${totalOz} oz,<span style="color: #c30f16;"> OR</span></p>
           <p>${comparison}</p>
-          <p>tracking from ${earliest.toISOString().split('T')[0]} to ${latest.toISOString().split('T')[0]}</p>
+          <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
           <p>average per day: <span style="color: #6495ed;">${average.toFixed(2)} oz, ${(average/128).toFixed(2)} gallons</span></p>
-          <p>latest entry: ${lastEntry.date} (${lastEntry.oz} oz)</p>
+          <p>roughly one gallon every <span style="color: #6495ed;">${daysPerGallon}</span> days</p>
+          <p>latest entry: ${formatDatePretty(new Date(lastEntry.date))} (${lastEntry.oz} oz)</p>
         `;
 
         new Chart(document.getElementById('milkChart'), {
           type: 'line',
           data: {
-            labels: labels,
+            labels: labels.map(d => formatDatePretty(d)),
             datasets: [{
-              label: 'Milk Tracker Graph',
-              data: dataPoints,
+              label: 'Cumulative Milk (oz)',
+              data: cumulative,
               borderColor: '#6495ed',
               backgroundColor: 'rgba(100,149,237,0.2)',
               borderWidth: 2,
@@ -160,12 +167,19 @@
           options: {
             responsive: true,
             scales: {
-              y: {
-                beginAtZero: false,
-                title: { display: true, text: 'Ounces' }
-              },
               x: {
+                ticks: {
+                  callback: function (value, index, ticks) {
+                    return index === 0 || index === ticks.length - 1
+                      ? this.getLabelForValue(value)
+                      : '';
+                  }
+                },
                 title: { display: true, text: 'Date' }
+              },
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Cumulative Ounces' }
               }
             },
             plugins: {
@@ -184,13 +198,7 @@
     updatePageContent(data);
   </script>
 
-  <div style="
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 0;
-  ">
+  <div style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 0;">
     <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Border" style="width: 100%; height: auto;" />
   </div>
 
