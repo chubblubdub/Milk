@@ -173,7 +173,9 @@
                     return index === 0 || index === ticks.length - 1
                       ? this.getLabelForValue(value)
                       : '';
-                  }
+                  },
+                  maxRotation: 0,
+                  minRotation: 0
                 },
                 title: { display: false, text: 'Date' }
               },
