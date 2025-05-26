@@ -155,8 +155,8 @@
           data: {
             labels: labels.map(d => formatDatePretty(d)),
             datasets: [{
-              label: 'Cumulative Milk (oz)',
-              data: cumulative,
+              label: 'The Journey',
+              data: cumulative.map(oz => oz / 128)
               borderColor: '#6495ed',
               backgroundColor: 'rgba(100,149,237,0.2)',
               borderWidth: 2,
@@ -175,11 +175,11 @@
                       : '';
                   }
                 },
-                title: { display: true, text: 'Date' }
+                title: { display: false, text: 'Date' }
               },
               y: {
                 beginAtZero: true,
-                title: { display: true, text: 'Cumulative Ounces' }
+                title: { display: true, text: 'Gallons' }
               }
             },
             plugins: {
