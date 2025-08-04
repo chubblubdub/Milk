@@ -105,96 +105,124 @@
     }
 
     function updatePageContent(data) {
-      if (!data) {
-        document.getElementById('output').innerHTML = '<p>Invalid data format 🐄😕</p>';
-        return;
-      }
+  if (!data) {
+    document.getElementById('output').innerHTML = '<p>Invalid data format 🐄😕</p>';
+    return;
+  }
 
-      try {
-        const milkData = JSON.parse(atob(data));
-        if (!Array.isArray(milkData) || milkData.length === 0) throw new Error();
+  try {
+    const milkData = JSON.parse(atob(data));
+    if (!Array.isArray(milkData) || milkData.length === 0) throw new Error();
 
-        milkData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    milkData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        let totalOz = 0;
-        let earliest = new Date(milkData[0].date);
-        let latest = new Date(milkData[0].date);
-        const labels = [];
-        const cumulative = [];
+    let totalOz = 0;
+    let earliest = new Date(milkData[0].date);
+    let latest = new Date(milkData[0].date);
+    const labels = [];
+    const cumulative = [];
 
-        milkData.forEach((entry, index) => {
-          const entryDate = new Date(entry.date);
-          totalOz += entry.oz;
-          cumulative.push(totalOz);
-          labels.push(entryDate);
-          if (entryDate < earliest) earliest = entryDate;
-          if (entryDate > latest) latest = entryDate;
-        });
+    milkData.forEach(entry => {
+      const entryDate = new Date(entry.date);
+      totalOz += entry.oz;
+      cumulative.push(totalOz);
+      labels.push(entryDate);
+      if (entryDate < earliest) earliest = entryDate;
+      if (entryDate > latest) latest = entryDate;
+    });
 
-        const totalDays = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
-        const average = (totalOz / totalDays);
-        const gallons = (totalOz / 128).toFixed(2);
-        const comparison = getRandomComparison(gallons, totalOz);
-        const lastEntry = milkData[milkData.length - 1];
+    const totalDays = Math.max(1, Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
+    const average = totalOz / totalDays;
+    const gallons = (totalOz / 128).toFixed(2);
+    const comparison = getRandomComparison(gallons, totalOz);
+    const lastEntry = milkData[milkData.length - 1];
+    const gallonPerDay = average / 128;
+    const daysPerGallon = gallonPerDay > 0 ? (1 / gallonPerDay).toFixed(1) : "∞";
 
-        const gallonPerDay = average / 128;
-        const daysPerGallon = gallonPerDay > 0 ? (1 / gallonPerDay).toFixed(1) : "∞";
+    // Day range toggle logic
+    const ranges = [7, 30, 90];
+    let currentRangeIndex = 1; // Default to 30
+    const updateShortTermStats = () => {
+      const daysBack = ranges[currentRangeIndex];
+      const sinceDate = new Date(latest);
+      sinceDate.setDate(sinceDate.getDate() - (daysBack - 1));
 
-        document.getElementById('output').innerHTML = `
-          <h2>total milk: <span id="milk-total">${gallons}</span> gallons</h2>
-          <p>that's about ${totalOz} oz,<span style="color: #c30f16;"> OR</span></p>
-          <p>${comparison}</p>
-          <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
-          <p>average per day: <span style="color: #6495ed;">${average.toFixed(2)} oz, ${(average/128).toFixed(2)} gallons</span></p>
-          <p>roughly one gallon every <span style="color: #6495ed;">${daysPerGallon}</span> days</p>
-          <p>latest entry: ${formatDatePretty(new Date(lastEntry.date))} (${lastEntry.oz} oz)</p>
-        `;
+      const recent = milkData.filter(entry => new Date(entry.date) >= sinceDate);
+      const recentTotal = recent.reduce((sum, entry) => sum + entry.oz, 0);
+      const recentDays = Math.max(1, Math.ceil((latest - sinceDate) / (1000 * 60 * 60 * 24)) + 1);
+      const recentAvg = recentTotal / recentDays;
+      const trend = recentAvg > average ? '⬆️' : recentAvg < average ? '⬇️' : '➡️';
 
-        new Chart(document.getElementById('milkChart'), {
-          type: 'line',
-          data: {
-            labels: labels.map(d => formatDatePretty(d)),
-            datasets: [{
-              label: 'The Journey',
-              data: cumulative.map(oz => oz / 128),
-              borderColor: '#6495ed',
-              backgroundColor: 'rgba(100,149,237,0.2)',
-              borderWidth: 2,
-              pointRadius: 2,
-              tension: 0.3
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: {
-                ticks: {
-                  callback: function (value, index, ticks) {
-                    return index === 0 || index === ticks.length - 1
-                      ? this.getLabelForValue(value)
-                      : '';
-                  },
-                  maxRotation: 0,
-                  minRotation: 0
-                },
-                title: { display: false, text: 'Date' }
+      document.getElementById('short-term').innerHTML = 
+        `<p>last ${daysBack} days ${trend}: <span style="color: #2e8b57;">${recentAvg.toFixed(2)} oz, ${(recentAvg/128).toFixed(2)} gallons</span></p>`;
+    };
+
+    document.getElementById('output').innerHTML = `
+      <h2>total milk: <span id="milk-total">${gallons}</span> gallons</h2>
+      <p>that's about ${totalOz} oz,<span style="color: #c30f16;"> OR</span></p>
+      <p>${comparison}</p>
+      <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
+      <p>average per day: <span style="color: #6495ed;">${average.toFixed(2)} oz, ${(average/128).toFixed(2)} gallons</span></p>
+      <div id="short-term"></div>
+      <button id="toggleRange" style="margin: 5px; padding: 4px 8px; font-size: 0.6em;">change view: last ${ranges[currentRangeIndex]} days</button>
+      <p>roughly one gallon every <span style="color: #6495ed;">${daysPerGallon}</span> days</p>
+      <p>latest entry: ${formatDatePretty(new Date(lastEntry.date))} (${lastEntry.oz} oz)</p>
+    `;
+
+    updateShortTermStats();
+
+    document.getElementById('toggleRange').onclick = () => {
+      currentRangeIndex = (currentRangeIndex + 1) % ranges.length;
+      document.getElementById('toggleRange').innerText = `change view: last ${ranges[currentRangeIndex]} days`;
+      updateShortTermStats();
+    };
+
+    new Chart(document.getElementById('milkChart'), {
+      type: 'line',
+      data: {
+        labels: labels.map(d => formatDatePretty(d)),
+        datasets: [{
+          label: 'The Journey',
+          data: cumulative.map(oz => oz / 128),
+          borderColor: '#6495ed',
+          backgroundColor: 'rgba(100,149,237,0.2)',
+          borderWidth: 2,
+          pointRadius: 2,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            ticks: {
+              callback: function (value, index, ticks) {
+                return index === 0 || index === ticks.length - 1
+                  ? this.getLabelForValue(value)
+                  : '';
               },
-              y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Gallons' }
-              }
+              maxRotation: 0,
+              minRotation: 0
             },
-            plugins: {
-              legend: { display: false },
-              tooltip: { enabled: true }
-            }
+            title: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Gallons' }
           }
-        });
-
-      } catch (e) {
-        document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        }
       }
-    }
+    });
+
+  } catch (e) {
+    document.getElementById('output').innerHTML = '<p>Invalid format. Please check your data! 🐄💭</p>';
+  }
+}
+
 
     const data = parseQueryString(window.location.href);
     updatePageContent(data);
