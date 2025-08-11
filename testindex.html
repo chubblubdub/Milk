@@ -285,9 +285,9 @@
         datasets: [{
           label: 'The Journey',
           data: cumulative.map(oz => oz / 128),
-          borderColor: 'var(--blue)',
+          borderColor: var(--blue),
           backgroundColor: 'rgba(100,149,237,0.15)',
-          borderWidth: 3,
+          borderWidth: 20,
           pointRadius: 0,
           tension: 0.25
         }]
@@ -335,7 +335,7 @@
 </script>
 
 <!-- Milk splash PNG fixed at bottom, from your attached version -->
-<div style="position: fixed; bottom: -20; left: 0; width: 100%; z-index: 0; pointer-events: none; user-select: none;">
+<div style="position: fixed; bottom: -1; left: 0; width: 100%; z-index: 0; pointer-events: none; user-select: none;">
   <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Splash" style="width: 100%; height: auto;" />
 </div>
 
