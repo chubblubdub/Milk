@@ -64,14 +64,14 @@
     to { opacity: 1; transform: translateY(0); }
   }
    #output h2 {
-     font-size: 0.8em;
+     font-size: 1em;
      font-weight: 600;
-     color: #555;
+     color: #fff;
      margin-bottom: 0.3em;
   }
 
   #milk-total {
-    font-size: 1em;      /* bigger number */
+    font-size: 1.3em;      /* bigger number */
     font-weight: 700;
     color: var(--blue);
     display: inline-block;
@@ -94,10 +94,10 @@
     font-size: 0.75em;
     border: none;
     border-radius: 6px;
-    background: linear-gradient(135deg, #a3b8ff, #537fd3);
+    background: linear-gradient(135deg, #537fd3, #2c54a8);
     color: white;
     cursor: pointer;
-    max-width: 240px;
+    max-width: 200px;
     width: 100%;
     box-shadow: 0 3px 6px rgba(83,127,211,0.4);
     user-select: none;
@@ -214,7 +214,7 @@
       <p>that's about <span id="total-oz">0</span> oz, <span style="color: #666;">OR</span></p>
       <p id="fact">${comparison}</p>
       <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
-      <p>average per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
+      <p>all-time per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
       <div id="short-term"></div>
       <button id="toggleRange">change view: last ${ranges[currentRangeIndex]} days</button>
       <p>roughly one gallon every <span style="color: var(--blue);" id="days-per-gallon">0.0</span> days</p>
