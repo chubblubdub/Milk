@@ -63,13 +63,21 @@
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
+   #output h2 {
+     font-size: 0.8em;
+     font-weight: 600;
+     color: #555;
+     margin-bottom: 0.3em;
+  }
+
   #milk-total {
-    font-size: 1em;
+    font-size: 1em;      /* bigger number */
     font-weight: 700;
     color: var(--blue);
     display: inline-block;
     margin-bottom: 0.1em;
   }
+
   /* FIX: Reduce gap under facts */
   #output p {
     font-size: 0.6em;
@@ -174,7 +182,7 @@
 
   function updatePageContent(milkData) {
     if (!milkData.length) {
-      document.getElementById('output').innerHTML = '<p>No milk data found 🐄😕</p>';
+      document.getElementById('output').innerHTML = '<p>no milk data found 🐄😕</p>';
       return;
     }
     milkData.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -259,7 +267,7 @@
         datasets: [{
           label: 'The Journey',
           data: cumulative.map(oz => oz / 128),
-          borderColor: 'var(--blue)',   // fixed: string literal for CSS var
+          borderColor: '#6495ed',   // fixed: string literal for CSS var
           backgroundColor: 'rgba(100,149,237,0.15)',
           borderWidth: 5,  // thicker line as requested
           pointRadius: 0,
