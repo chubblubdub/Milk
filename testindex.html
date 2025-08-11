@@ -25,7 +25,7 @@
     font-family: 'Martian Mono', monospace;
     text-align: center;
     margin: 0;
-    padding: 15px 10px 20px 10px;
+    padding: 15px 10px 80px 10px; /* leave room for splash */
     overflow-x: hidden;
     background-color: var(--light-bg);
     color: var(--light-text);
@@ -78,7 +78,7 @@
     color: var(--accent-blue);
     font-size: 0.95rem;
     min-height: 2.4em;
-    margin: 6px 0 10px;
+    margin: 10px 0 0;
     opacity: 1;
     transition: opacity 0.6s ease-in-out;
   }
@@ -118,13 +118,38 @@
   .milk-float {
     position: fixed;
     font-size: 2rem;
-    animation: floatMilk 12s linear infinite;
     opacity: 0.15;
     z-index: -1;
+    animation-name: floatMilk;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
   }
   @keyframes floatMilk {
-    0% { transform: translateY(100vh) translateX(0); }
-    100% { transform: translateY(-120vh) translateX(50px); }
+    0% {
+      transform: translateY(110vh) translateX(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.15;
+    }
+    90% {
+      opacity: 0.15;
+    }
+    100% {
+      transform: translateY(-120vh) translateX(50px);
+      opacity: 0;
+    }
+  }
+  /* Milk splash footer */
+  #milkSplash {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.15;
+    z-index: -1;
   }
 </style>
 </head>
@@ -134,7 +159,6 @@
 
 <div class="card">
   <div id="output"><p>Loading your calcium journey... 🐄🥛</p></div>
-  <div id="comparisonFact"></div>
 </div>
 
 <div class="card">
@@ -145,15 +169,21 @@
 
 <!-- Floating milk emojis -->
 <script>
+  const floatDuration = 12000; // 12s
   for (let i = 0; i < 8; i++) {
     const milk = document.createElement("div");
     milk.className = "milk-float";
-    milk.style.left = `${Math.random()*100}vw`;
-    milk.style.animationDelay = `${Math.random()*12}s`;
-    milk.textContent = "🥛";
+    milk.style.left = `${Math.random() * 100}vw`;
+    milk.style.animationDuration = `${floatDuration + Math.random() * 4000}ms`;
+    milk.style.animationDelay = `-${Math.random() * floatDuration}ms`;
     document.body.appendChild(milk);
   }
 </script>
+
+<!-- Milk splash SVG footer -->
+<svg id="milkSplash" viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
+  <path fill="#6495ed" fill-opacity="0.15" d="M0,60 C120,90 300,30 480,60 C660,90 840,30 1020,60 C1200,90 1320,30 1440,60 L1440,120 L0,120 Z"/>
+</svg>
 
 <script>
   function applyDarkModeStyles(isDarkMode) {
@@ -184,21 +214,21 @@
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  // Comparison facts array (no red, blue only)
   const comparisons = [
     gallons => `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
     gallons => `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🧊`,
     gallons => `${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
-    gallons => `${(gallons / 17.44).toFixed(3)} humans by weight 🧕‍♂️`,
+    gallons => `${(gallons / 17.44).toFixed(3)} humans by weight🧍🏼‍♂️`,
     gallons => `${(gallons / 110).toFixed(3)}% of cow's lifetime production 🐄`,
     (gallons, totalOz) => `capacity of ${(totalOz / 50).toFixed(0)} human stomachs 🫃`,
     gallons => `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🏗️`,
-    gallons => `$${(gallons*4.85).toFixed(2)} worth at Fareway 🛒`
+    gallons => `$${(gallons*5).toFixed(2)} worth at Fareway 🛒`
   ];
 
   let currentFactIndex = -1;
   let factInterval;
-  const factElement = document.getElementById('comparisonFact');
+  const factElement = document.createElement('p');
+  factElement.id = 'comparisonFact';
 
   function fadeText(newText) {
     factElement.style.opacity = 0;
@@ -239,7 +269,7 @@
   function updatePageContent(milkData) {
     if (!milkData.length) {
       document.getElementById('output').innerHTML = '<p>No milk data found 🐄😕</p>';
-      factElement.textContent = '';
+      if (factElement.parentNode) factElement.remove();
       return;
     }
     milkData.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -258,6 +288,7 @@
     const totalDays = Math.max(1, Math.ceil((latest - earliest) / 86400000) + 1);
     const average = totalOz / totalDays;
     const gallons = totalOz / 128;
+    const calories = gallons * 2400;
 
     const lastEntry = milkData[milkData.length - 1];
 
@@ -267,8 +298,9 @@
     const outputDiv = document.getElementById('output');
     outputDiv.innerHTML = `
       <h2>total milk: <span id="milk-total">0.00</span> gallons</h2>
-      <p>that's about <span id="milk-oz">0.00</span> oz,<span style="color: var(--accent-blue);"> OR</span></p>
-      <p id="comparisonFact"></p>
+      <p>that's about <span id="milk-oz">0.00</span> oz, <span style="color: var(--accent-blue); font-weight: 700;">OR</span></p>
+      <p id="caloriesLine" style="font-weight:600; font-size:0.9rem; margin-top: 6px;">calories: <span id="milk-cals">0</span></p>
+      <div id="comparisonFact"></div>
       <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
       <p>average per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
       <div id="short-term"></div>
@@ -276,13 +308,29 @@
       <p>latest entry: ${formatDatePretty(new Date(lastEntry.date))} (${lastEntry.oz} oz)</p>
     `;
 
-    // Update factElement reference because #output innerHTML reset it
-    const newFactElement = document.getElementById('comparisonFact');
+    // Append fact element under OR line now
+    const orLine = outputDiv.querySelector('p:nth-of-type(2)');
+    if (orLine) {
+      orLine.insertAdjacentElement('afterend', factElement);
+    }
 
     animateNumber(document.getElementById('milk-total'), 0, gallons, 1200);
     animateNumber(document.getElementById('milk-oz'), 0, totalOz, 1200);
     animateNumber(document.getElementById('milk-avg'), 0, average, 1200);
     animateNumber(document.getElementById('milk-avg-gal'), 0, average/128, 1200);
+
+    // Animate calories separately (whole number)
+    const calsEl = document.getElementById('milk-cals');
+    let calStart = 0;
+    const calEnd = Math.round(calories);
+    let calStartTime = null;
+    function animateCals(ts) {
+      if (!calStartTime) calStartTime = ts;
+      const progress = Math.min((ts - calStartTime) / 1200, 1);
+      calsEl.textContent = Math.floor(calStart + (calEnd - calStart) * progress);
+      if (progress < 1) requestAnimationFrame(animateCals);
+    }
+    requestAnimationFrame(animateCals);
 
     function updateShortTermStats(){
       const daysBack = ranges[currentRangeIndex];
@@ -312,9 +360,8 @@
           data: cumulative.map(oz=>oz/128),
           borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue'),
           backgroundColor: 'rgba(100,149,237,0.15)',
-          borderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 6,
+          borderWidth: 3,
+          pointRadius: 0,
           tension: 0.35
         }]
       },
