@@ -2,320 +2,342 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Milk Tracker 🥛🐄</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Milk Tracker</title>
+<link rel="icon" type="image/png" href="milkFavicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&family=Cal+Sans:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&family=Cal+Sans:wght@400&display=swap');
+  :root {
+    --blue: #6495ed;
+    --light-bg: #f0f8ff;
+    --dark-bg: #000;
+    --light-text: #333;
+    --dark-text: #f0f8ff;
+    --accent-blue: #537fd3;
+    --accent-green: #2e8b57;
+  }
+  * {
+    box-sizing: border-box;
+    transition: background-color 0.5s, color 0.5s;
+  }
   body {
     font-family: 'Martian Mono', monospace;
-    margin: 0; padding: 0;
-    background: linear-gradient(180deg, #f0f8ff, #fafaff);
-    color: #222;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-  }
-  header {
     text-align: center;
-    padding: 1rem 0 0.5rem;
-  }
-  h1 {
-    font-family: 'Cal Sans', sans-serif;
-    font-weight: 400;
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    color: #6495ed;
     margin: 0;
+    padding: 15px 10px 20px 10px;
+    overflow-x: hidden;
+    background-color: var(--light-bg);
+    color: var(--light-text);
+  }
+  body.dark {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+  }
+  #main-header {
+    font-family: 'Cal Sans', sans-serif;
+    font-size: 2.6rem;
+    line-height: 1.2;
+    color: var(--blue);
+    animation: bounceIn 1s ease;
+    margin-bottom: 8px;
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .card {
+    max-width: 700px;
+    margin: 0 auto 18px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    padding: 16px 18px 20px;
+    animation: fadeSlideIn 0.8s ease forwards;
+    word-break: break-word;
+  }
+  body.dark .card {
+    background: rgba(20, 20, 20, 0.6);
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #milk-total {
+    font-size: 1.6rem;
+    font-weight: 700;
     line-height: 1.1;
   }
-  .stats {
-    text-align: center;
-    margin-top: 0.7rem;
-    margin-bottom: 1rem;
-    max-width: 320px;
-    padding: 0 12px;
-  }
-  .stat {
-    font-size: clamp(1.2rem, 4vw, 2rem);
-    font-weight: 700;
-    margin: 0.3rem 0;
-  }
-  #jugGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
-    gap: 5px;
-    max-width: 320px;
-    margin: 0 auto 1rem;
-    justify-items: center;
-  }
-  .jug {
-    width: 24px;
-    height: 32px;
-    user-select: none;
+  #output p {
+    font-size: 0.9rem;
+    margin: 5px 0;
   }
   #comparisonFact {
-    font-family: 'Martian Mono', monospace;
-    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
-    margin: 0 auto 1.5rem;
-    max-width: 320px;
-    color: #c30f16;
     font-weight: 600;
-    text-align: center;
+    color: var(--accent-blue);
+    font-size: 0.95rem;
     min-height: 2.4em;
+    margin: 6px 0 10px;
+    opacity: 1;
     transition: opacity 0.6s ease-in-out;
   }
-  canvas {
-    max-width: 95vw;
-    margin-bottom: 2rem;
-  }
-  button {
-    background: linear-gradient(135deg, #e0e6ff, #a3b8ff);
+  #toggleRange {
+    margin: 10px auto 14px;
+    padding: 7px 14px;
+    font-size: 0.85rem;
     border: none;
-    border-radius: 14px;
-    color: #1a237e;
-    font-weight: 600;
-    padding: 8px 14px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #a3b8ff, var(--accent-blue));
+    color: white;
     cursor: pointer;
-    font-size: clamp(0.8rem, 2vw, 1rem);
-    box-shadow: 0 2px 8px rgba(100, 110, 255, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.22s, background-color 0.33s, box-shadow 0.3s;
+    box-shadow: 0 4px 9px rgba(83, 127, 211, 0.4);
+    display: inline-block;
+    max-width: 240px;
+    width: 100%;
     user-select: none;
   }
-  button:hover,
-  button:focus {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(100, 110, 255, 0.6);
+  #toggleRange:hover,
+  #toggleRange:focus {
+    background: linear-gradient(135deg, var(--accent-blue), #2c54a8);
+    transform: scale(1.06);
     outline: none;
+    box-shadow: 0 6px 14px rgba(41, 83, 164, 0.7);
+  }
+  #milkChart {
+    max-width: 600px;
+    margin: 16px auto 24px;
   }
   footer {
-    font-family: 'Cal Sans', sans-serif;
-    font-size: 0.85rem;
+    margin-top: 18px;
     color: #808080;
-    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  /* floating milk emoji */
+  .milk-float {
+    position: fixed;
+    font-size: 2rem;
+    animation: floatMilk 12s linear infinite;
+    opacity: 0.15;
+    z-index: -1;
+  }
+  @keyframes floatMilk {
+    0% { transform: translateY(100vh) translateX(0); }
+    100% { transform: translateY(-120vh) translateX(50px); }
   }
 </style>
 </head>
 <body>
-  <header>
-    <h1>🥛 milk tracker 🐄</h1>
-  </header>
-  <main>
-    <section class="stats" aria-label="Milk consumption statistics">
-      <div class="stat" id="totalGallons" aria-live="polite"></div>
-      <div class="stat" id="avgPerDay" aria-live="polite"></div>
-    </section>
 
-    <section id="jugGrid" aria-label="Visual representation of milk gallons"></section>
+<h1 id="main-header">🥛MILK TRACKER🐄</h1>
 
-    <section id="comparisonFact" aria-live="polite" aria-atomic="true"></section>
+<div class="card">
+  <div id="output"><p>Loading your calcium journey... 🐄🥛</p></div>
+  <div id="comparisonFact"></div>
+</div>
 
-    <canvas id="milkChart" aria-label="Milk consumption over time chart"></canvas>
+<div class="card">
+  <canvas id="milkChart"></canvas>
+</div>
 
-    <section style="text-align:center; margin-bottom: 2rem;">
-      <button id="toggleRange" aria-controls="milkChart">Change view: last 30 days</button>
-    </section>
-  </main>
+<footer><p>made by canon</p></footer>
 
-  <footer>made by canon</footer>
+<!-- Floating milk emojis -->
+<script>
+  for (let i = 0; i < 8; i++) {
+    const milk = document.createElement("div");
+    milk.className = "milk-float";
+    milk.style.left = `${Math.random()*100}vw`;
+    milk.style.animationDelay = `${Math.random()*12}s`;
+    milk.textContent = "🥛";
+    document.body.appendChild(milk);
+  }
+</script>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Your original fun comparisons list:
-    const comparisons = [
-      gallons => `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
-      gallons => `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🧊`,
-      gallons => `${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
-      gallons => `${(gallons / 17.44).toFixed(3)} humans by weight 🧕‍♂️`,
-      gallons => `${(gallons / 110).toFixed(3)}% of cow's lifetime production 🐄`,
-      (gallons, totalOz) => `capacity of ${(totalOz / 50).toFixed(0)} human stomachs 🫃`,
-      gallons => `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🏗️`,
-      gallons => `$${(gallons*4.85).toFixed(2)} worth at Fareway 🛒`
-    ];
+<script>
+  function applyDarkModeStyles(isDarkMode) {
+    document.body.classList.toggle('dark', isDarkMode);
+  }
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyDarkModeStyles(isDarkMode);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => applyDarkModeStyles(e.matches));
 
-    // Fade text helper
-    function fadeText(element, text, duration = 600) {
-      element.style.opacity = 0;
-      setTimeout(() => {
-        element.textContent = text;
-        element.style.opacity = 1;
-      }, duration);
-    }
+  function getURLData() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('data');
+    if (!encoded) return null;
+    try {
+      const parsed = JSON.parse(atob(encoded));
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch { return null; }
+  }
+  async function fetchBaseMilkData() {
+    try {
+      const r = await fetch('data.json');
+      if (!r.ok) throw new Error();
+      const json = await r.json();
+      return Array.isArray(json) ? json : [];
+    } catch { return []; }
+  }
+  function formatDatePretty(date) {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
 
-    // Cycling comparison facts without immediate repeats
-    let currentFactIndex = -1;
-    function nextComparisonFact(gallons, totalOz) {
+  // Comparison facts array (no red, blue only)
+  const comparisons = [
+    gallons => `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
+    gallons => `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🧊`,
+    gallons => `${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
+    gallons => `${(gallons / 17.44).toFixed(3)} humans by weight 🧕‍♂️`,
+    gallons => `${(gallons / 110).toFixed(3)}% of cow's lifetime production 🐄`,
+    (gallons, totalOz) => `capacity of ${(totalOz / 50).toFixed(0)} human stomachs 🫃`,
+    gallons => `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🏗️`,
+    gallons => `$${(gallons*4.85).toFixed(2)} worth at Fareway 🛒`
+  ];
+
+  let currentFactIndex = -1;
+  let factInterval;
+  const factElement = document.getElementById('comparisonFact');
+
+  function fadeText(newText) {
+    factElement.style.opacity = 0;
+    setTimeout(() => {
+      factElement.textContent = newText;
+      factElement.style.opacity = 1;
+    }, 600);
+  }
+
+  function cycleComparisonFacts(gallons, totalOz) {
+    if (factInterval) clearInterval(factInterval);
+
+    function nextFact() {
       let nextIndex;
       do {
         nextIndex = Math.floor(Math.random() * comparisons.length);
       } while (nextIndex === currentFactIndex && comparisons.length > 1);
       currentFactIndex = nextIndex;
       const fact = comparisons[nextIndex](gallons, totalOz);
-      fadeText(document.getElementById("comparisonFact"), fact);
+      fadeText(fact);
     }
 
-    // Render milk jugs grid
-    function renderJugs(totalGallons) {
-      const jugGrid = document.getElementById("jugGrid");
-      jugGrid.innerHTML = "";
-      const fullJugs = Math.floor(totalGallons);
-      const partial = totalGallons - fullJugs;
-      for (let i = 0; i < fullJugs; i++) {
-        jugGrid.innerHTML += `
-          <svg class="jug" viewBox="0 0 24 32" aria-hidden="true" focusable="false">
-            <rect width="24" height="32" rx="4" fill="#fff" stroke="#6495ed" stroke-width="2"/>
-            <rect y="4" width="24" height="24" rx="4" fill="#6495ed"/>
-          </svg>`;
-      }
-      if (partial > 0) {
-        const filledHeight = Math.round(partial * 24);
-        const y = 28 - filledHeight;
-        jugGrid.innerHTML += `
-          <svg class="jug" viewBox="0 0 24 32" aria-hidden="true" focusable="false">
-            <rect width="24" height="32" rx="4" fill="#fff" stroke="#6495ed" stroke-width="2"/>
-            <rect y="${y}" width="24" height="${filledHeight}" rx="4" fill="#6495ed"/>
-          </svg>`;
-      }
+    nextFact();
+    factInterval = setInterval(nextFact, 10000);
+  }
+
+  function animateNumber(el, start, end, duration) {
+    let startTime = null;
+    function animate(ts) {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      el.textContent = (start + (end - start) * progress).toFixed(2);
+      if (progress < 1) requestAnimationFrame(animate);
     }
+    requestAnimationFrame(animate);
+  }
 
-    // Responsive date formatting
-    function formatDatePretty(date) {
-      return date.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  function updatePageContent(milkData) {
+    if (!milkData.length) {
+      document.getElementById('output').innerHTML = '<p>No milk data found 🐄😕</p>';
+      factElement.textContent = '';
+      return;
     }
+    milkData.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    let totalOz = 0;
+    let earliest = new Date(milkData[0].date);
+    let latest = new Date(milkData[0].date);
+    const labels = [], cumulative = [];
+    milkData.forEach(e=>{
+      const d=new Date(e.date);
+      totalOz += e.oz;
+      cumulative.push(totalOz);
+      labels.push(d);
+      if(d<earliest) earliest=d;
+      if(d>latest) latest=d;
+    });
+    const totalDays = Math.max(1, Math.ceil((latest - earliest) / 86400000) + 1);
+    const average = totalOz / totalDays;
+    const gallons = totalOz / 128;
 
-    // Chart instance placeholder
-    let milkChart;
+    const lastEntry = milkData[milkData.length - 1];
 
-    // Update short term stats (7, 30, 90 day ranges)
     const ranges = [7,30,90];
     let currentRangeIndex = 1;
 
-    // Updates short term stats and button text
-    function updateShortTermStats(milkData, latest, average) {
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerHTML = `
+      <h2>total milk: <span id="milk-total">0.00</span> gallons</h2>
+      <p>that's about <span id="milk-oz">0.00</span> oz,<span style="color: var(--accent-blue);"> OR</span></p>
+      <p id="comparisonFact"></p>
+      <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
+      <p>average per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
+      <div id="short-term"></div>
+      <button id="toggleRange">change view: last ${ranges[currentRangeIndex]} days</button>
+      <p>latest entry: ${formatDatePretty(new Date(lastEntry.date))} (${lastEntry.oz} oz)</p>
+    `;
+
+    // Update factElement reference because #output innerHTML reset it
+    const newFactElement = document.getElementById('comparisonFact');
+
+    animateNumber(document.getElementById('milk-total'), 0, gallons, 1200);
+    animateNumber(document.getElementById('milk-oz'), 0, totalOz, 1200);
+    animateNumber(document.getElementById('milk-avg'), 0, average, 1200);
+    animateNumber(document.getElementById('milk-avg-gal'), 0, average/128, 1200);
+
+    function updateShortTermStats(){
       const daysBack = ranges[currentRangeIndex];
       const sinceDate = new Date(latest);
       sinceDate.setDate(sinceDate.getDate() - (daysBack - 1));
-
-      const recent = milkData.filter(entry => new Date(entry.date) >= sinceDate);
-      const recentTotal = recent.reduce((sum, e) => sum + e.oz, 0);
-      const recentDays = Math.max(1, Math.ceil((latest - sinceDate)/(1000*60*60*24))+1);
+      const recent = milkData.filter(e=>new Date(e.date)>=sinceDate);
+      const recentTotal = recent.reduce((s,e)=>s+e.oz,0);
+      const recentDays = Math.max(1, Math.ceil((latest - sinceDate) / 86400000) + 1);
       const recentAvg = recentTotal / recentDays;
-
       const trend = recentAvg > average ? '⬆️' : recentAvg < average ? '⬇️' : '➡️';
-
-      document.getElementById('shortTerm').textContent = `Last ${daysBack} days ${trend}: ${recentAvg.toFixed(2)} oz (${(recentAvg/128).toFixed(2)} gal)`;
-      document.getElementById('toggleRange').textContent = `Change view: last ${ranges[(currentRangeIndex+1)%ranges.length]} days`;
+      document.getElementById('short-term').innerHTML =
+        `<p>last ${daysBack} days ${trend}: <span style="color: var(--accent-green);">${recentAvg.toFixed(2)} oz, ${(recentAvg/128).toFixed(2)} gallons</span></p>`;
     }
+    updateShortTermStats();
+    document.getElementById('toggleRange').onclick = () => {
+      currentRangeIndex = (currentRangeIndex+1)%ranges.length;
+      document.getElementById('toggleRange').innerText = `change view: last ${ranges[currentRangeIndex]} days`;
+      updateShortTermStats();
+    };
 
-    // Render or update Chart.js chart
-    function renderChart(milkData, latest) {
-      const ctx = document.getElementById('milkChart').getContext('2d');
-      if (milkChart) milkChart.destroy();
-
-      // Filter data for current range
-      const daysBack = ranges[currentRangeIndex];
-      const sinceDate = new Date(latest);
-      sinceDate.setDate(sinceDate.getDate() - (daysBack - 1));
-      const filteredData = milkData.filter(e => new Date(e.date) >= sinceDate);
-
-      milkChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: filteredData.map(e => formatDatePretty(new Date(e.date))),
-          datasets: [{
-            label: 'Gallons',
-            data: filteredData.map(e => e.oz/128),
-            borderColor: '#6495ed',
-            backgroundColor: 'rgba(100,149,237,0.25)',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            fill: true
-          }]
+    new Chart(document.getElementById('milkChart'), {
+      type: 'line',
+      data: {
+        labels: labels.map(d=>formatDatePretty(d)),
+        datasets: [{
+          label: 'The Journey',
+          data: cumulative.map(oz=>oz/128),
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue'),
+          backgroundColor: 'rgba(100,149,237,0.15)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          tension: 0.35
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { ticks: { maxRotation: 0, minRotation: 0 } },
+          y: { beginAtZero: true, title: { display: true, text: 'Gallons' } }
         },
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              ticks: { maxRotation:0, minRotation:0 },
-              title: { display: false }
-            },
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Gallons' }
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true }
-          }
-        }
-      });
-    }
-
-    // Update entire page content
-    function updatePageContent(milkData) {
-      if (!milkData || !Array.isArray(milkData) || milkData.length === 0) {
-        document.getElementById("totalGallons").textContent = "No milk data found 🐄😕";
-        return;
+        plugins: { legend: { display: false } }
       }
-      milkData.sort((a,b) => new Date(a.date) - new Date(b.date));
-      const earliest = new Date(milkData[0].date);
-      const latest = new Date(milkData[milkData.length-1].date);
-      const totalOz = milkData.reduce((sum, e) => sum + e.oz, 0);
-      const totalGallons = totalOz / 128;
-      const totalDays = Math.max(1, Math.ceil((latest - earliest)/(1000*60*60*24))+1);
-      const average = totalOz / totalDays;
+    });
 
-      document.getElementById("totalGallons").textContent = `total milk: ${totalGallons.toFixed(2)} gallons`;
-      document.getElementById("avgPerDay").textContent = `average per day: ${average.toFixed(2)} oz (${(average/128).toFixed(2)} gal)`;
+    cycleComparisonFacts(gallons, totalOz);
+  }
 
-      renderJugs(totalGallons);
-      renderChart(milkData, latest);
-
-      // Show first comparison fact immediately
-      nextComparisonFact(totalGallons, totalOz);
-
-      // Cycle facts every 10 seconds
-      if(window.comparisonInterval) clearInterval(window.comparisonInterval);
-      window.comparisonInterval = setInterval(() => {
-        nextComparisonFact(totalGallons, totalOz);
-      }, 10000);
-
-      // Toggle range button
-      const btn = document.getElementById('toggleRange');
-      btn.onclick = () => {
-        currentRangeIndex = (currentRangeIndex + 1) % ranges.length;
-        renderChart(milkData, latest);
-      };
-    }
-
-    // Get data from URL ?data=base64 or fallback to data.json
-    async function getMilkData() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('data')) {
-        try {
-          const decoded = atob(decodeURIComponent(params.get('data')));
-          const parsed = JSON.parse(decoded);
-          if (Array.isArray(parsed)) return parsed;
-          if (parsed && typeof parsed === 'object') return [parsed];
-        } catch {
-          // fallback silently
-        }
-      }
-      try {
-        const resp = await fetch('data.json');
-        if (resp.ok) {
-          const json = await resp.json();
-          if (Array.isArray(json)) return json;
-        }
-      } catch {}
-      return [];
-    }
-
-    (async function() {
-      const milkData = await getMilkData();
-      updatePageContent(milkData);
-    })();
-  </script>
+  (async function startMilkTracker(){
+    const baseData = await fetchBaseMilkData();
+    const urlData = getURLData();
+    const combinedData = [...baseData];
+    if(urlData) urlData.forEach(e=>{ if(e.date && typeof e.oz === 'number') combinedData.push(e); });
+    updatePageContent(combinedData);
+  })();
+</script>
 </body>
 </html>
