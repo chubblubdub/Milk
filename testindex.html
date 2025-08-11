@@ -51,22 +51,20 @@
   .card {
     max-width: 700px;
     margin: 0 auto 20px;
-    background: var(--gray-box-bg-light);
-    backdrop-filter: blur(10px);
+    /* removed background and blur */
     border-radius: 16px;
-    padding: 20px;
+    padding: 12px 20px; /* slightly less vertical padding */
     animation: fadeSlideIn 0.8s ease forwards;
   }
   body.dark .card {
-    background: var(--gray-box-bg-dark);
+    /* removed dark background */
   }
   @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  /* smaller total milk text */
   #milk-total {
-    font-size: 1.2em; /* reduced from 1.6em */
+    font-size: 1em;
     font-weight: 700;
     color: var(--blue);
     display: inline-block;
@@ -82,14 +80,13 @@
     font-weight: 600;
     margin-bottom: 8px; /* smaller bottom margin */
   }
-  /* toggleRange button uses hover colors permanently */
   #toggleRange {
     margin: 8px auto;
     padding: 6px 12px;
     font-size: 0.75em;
     border: none;
     border-radius: 6px;
-    background: linear-gradient(135deg, #537fd3, #2c54a8); /* hover colors applied always */
+    background: linear-gradient(135deg, #a3b8ff, #537fd3);
     color: white;
     cursor: pointer;
     max-width: 240px;
@@ -99,8 +96,8 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
   #toggleRange:hover {
+    background: linear-gradient(135deg, #537fd3, #2c54a8);
     transform: scale(1.05);
-    /* no background-color change on hover */
   }
   #milkChart {
     max-width: 600px;
@@ -262,9 +259,9 @@
         datasets: [{
           label: 'The Journey',
           data: cumulative.map(oz => oz / 128),
-          borderColor: '#6495ed',   // changed from 'var(--blue)' to hex for consistent blue color
+          borderColor: 'var(--blue)',   // fixed: string literal for CSS var
           backgroundColor: 'rgba(100,149,237,0.15)',
-          borderWidth: 5,
+          borderWidth: 5,  // thicker line as requested
           pointRadius: 0,
           tension: 0.25
         }]
@@ -312,7 +309,9 @@
 </script>
 
 <!-- Milk splash PNG fixed at bottom, from your attached version -->
-<div style="display:none;"></div>
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000; pointer-events: none; user-select: none;">
+  <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Splash" style="width: 100%; height: auto;" />
+</div>
 
 </body>
 </html>
