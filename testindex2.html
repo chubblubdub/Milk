@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Milk Tracker</title>
+
+<link rel="icon" type="image/png" href="milkFavicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&family=Cal+Sans&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  body { font-family: 'Martian Mono', monospace; text-align:center; padding:20px; }
+  #main-header { font-family: 'Cal Sans', sans-serif; font-size:3.5em; color:#6495ed; }
+  #milk-total { font-size:1.6em; font-weight:700; }
+  #milkChart { max-width:600px; margin:20px auto; }
+  #output { font-size:0.65em; }
+</style>
+</head>
+
+<body>
+
+<h1 id="main-header">🥛MILK TRACKER🐄</h1>
+
+<div id="output">
+  <p>Loading your calcium journey... 🐄🥛</p>
+</div>
+
+<canvas id="milkChart"></canvas>
+
+<footer style="margin-top:10px;color:#808080;">
+  <p>made by canon</p>
+</footer>
+
+<script>
+/* ---------- DATE HELPERS ---------- */
+
+// YYYYMMDD → Date
+function parseShortDate(num) {
+  const s = String(num);
+  return new Date(
+    s.slice(0,4),
+    s.slice(4,6) - 1,
+    s.slice(6,8)
+  );
+}
+
+// Date → readable
+function prettyDate(d) {
+  return d.toLocaleDateString('en-US', {
+    year:'numeric', month:'long', day:'numeric'
+  });
+}
+
+/* ---------- DATA LOADING ---------- */
+
+async function fetchBaseMilkData() {
+  try {
+    const r = await fetch('data.json');
+    return await r.json();
+  } catch {
+    return [];
+  }
+}
+
+function getURLData() {
+  const p = new URLSearchParams(location.search).get('data');
+  if (!p) return [];
+  try { return JSON.parse(atob(p)); }
+  catch { return []; }
+}
+
+/* ---------- NORMALIZE ---------- */
+/*
+ Expects: { "YYYYMMDD": oz }
+*/
+function normalize(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const k = Object.keys(entry);
+  if (k.length !== 1) return null;
+
+  const dateNum = k[0];
+  const oz = entry[dateNum];
+
+  if (!/^\d{8}$/.test(dateNum) || typeof oz !== 'number') return null;
+
+  return {
+    date: parseShortDate(dateNum),
+    oz
+  };
+}
+
+/* ---------- MAIN ---------- */
+
+function updatePage(data) {
+  if (!data.length) {
+    output.innerHTML = '<p>No milk data 🐄😕</p>';
+    return;
+  }
+
+  data.sort((a,b)=>a.date-b.date);
+
+  let totalOz = 0;
+  const labels = [];
+  const cumulative = [];
+
+  data.forEach(e=>{
+    totalOz += e.oz;
+    labels.push(prettyDate(e.date));
+    cumulative.push(totalOz / 128);
+  });
+
+  const first = data[0].date;
+  const last  = data[data.length-1].date;
+  const days  = Math.max(1, Math.ceil((last-first)/86400000)+1);
+  const avg   = totalOz / days;
+
+  output.innerHTML = `
+    <h2>total milk: <span id="milk-total">${(totalOz/128).toFixed(2)}</span> gallons</h2>
+    <p>${totalOz} oz</p>
+    <p>tracking from ${prettyDate(first)} to ${prettyDate(last)}</p>
+    <p>average per day: ${avg.toFixed(2)} oz (${(avg/128).toFixed(2)} gal)</p>
+    <p>latest entry: ${prettyDate(last)} (${data[data.length-1].oz} oz)</p>
+  `;
+
+  new Chart(milkChart, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        data:cumulative,
+        borderWidth:2,
+        tension:0.3,
+        pointRadius:2
+      }]
+    },
+    options:{
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:true, title:{display:true,text:'Gallons'} } }
+    }
+  });
+}
+
+/* ---------- START ---------- */
+
+(async()=>{
+  const raw = [...await fetchBaseMilkData(), ...getURLData()];
+  const milk = raw.map(normalize).filter(Boolean);
+  updatePage(milk);
+})();
+</script>
+
+<div style="position:fixed;bottom:0;left:0;width:100%;">
+  <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" style="width:100%;">
+</div>
+
+</body>
+</html>
