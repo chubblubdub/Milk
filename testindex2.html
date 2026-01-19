@@ -125,15 +125,34 @@
     let latest=parseShortDate(milkData[0].d);
     const labels=[], cumulative=[];
 
-    milkData.forEach(e=>{
-      const d = parseShortDate(e.d);
-      if (!d) return; // skip invalid
+    // First, map milkData to include valid dates
+    const validMilkData = milkData
+      .map(e => ({ ...e, dateObj: parseShortDate(e.d) }))
+      .filter(e => e.dateObj !== null);
+
+    if (!validMilkData.length) {
+      document.getElementById('output').innerHTML = '<p>no milk data found 🐄😕</p>';
+      return;
+    }
+
+    // sort by date
+    validMilkData.sort((a,b) => a.dateObj - b.dateObj);
+
+    // initialize totals
+    let totalOz = 0;
+    let earliest = validMilkData[0].dateObj;
+    let latest = validMilkData[0].dateObj;
+    const labels = [];
+    const cumulative = [];
+
+    validMilkData.forEach(e => {
+      const d = e.dateObj;
       totalOz += e.o;
       cumulative.push(totalOz);
       labels.push(d);
-      if(d < earliest) earliest = d;
-      if(d > latest) latest = d;
-     });
+      if (d < earliest) earliest = d;
+      if (d > latest) latest = d;
+    });
 
     const totalDays=Math.max(1,Math.ceil((latest-earliest)/86400000)+1);
     const average=totalOz/totalDays;
