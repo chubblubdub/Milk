@@ -4,154 +4,313 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Milk Tracker</title>
-
 <link rel="icon" type="image/png" href="milkFavicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&family=Cal+Sans&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;700&family=Cal+Sans:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-  body { font-family: 'Martian Mono', monospace; text-align:center; padding:20px; }
-  #main-header { font-family: 'Cal Sans', sans-serif; font-size:3.5em; color:#6495ed; }
-  #milk-total { font-size:1.6em; font-weight:700; }
-  #milkChart { max-width:600px; margin:20px auto; }
-  #output { font-size:0.65em; }
+  :root {
+    --blue: #6495ed;
+    --light-bg: #f0f8ff;
+    --dark-bg: #000;
+    --light-text: #333;
+    --dark-text: #f0f8ff;
+    --accent-green: #2e8b57;
+    --gray-box-bg-light: rgba(255, 255, 255, 0.6);
+    --gray-box-bg-dark: rgba(20, 20, 20, 0.6);
+  }
+  * {
+    box-sizing: border-box;
+    transition: background-color 0.5s, color 0.5s;
+  }
+  body {
+    font-family: 'Martian Mono', monospace;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    overflow-x: hidden;
+    background-color: var(--light-bg);
+    color: var(--light-text);
+    margin-bottom: 140px;
+  }
+  body.dark {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+  }
+  #main-header {
+    font-family: 'Cal Sans', sans-serif;
+    font-size: 2.25em;
+    color: var(--blue);
+    animation: bounceIn 1s ease;
+    margin-bottom: 10px;
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .card {
+    max-width: 700px;
+    margin: 0 auto 20px;
+    border-radius: 16px;
+    padding: 12px 20px;
+    animation: fadeSlideIn 0.8s ease forwards;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #output h2 {
+    font-size: 1em;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.3em;
+  }
+  #milk-total {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--blue);
+    display: inline-block;
+    margin-bottom: 0.1em;
+  }
+  #output p {
+    font-size: 0.6em;
+    margin: 4px 0;
+  }
+  #output p:nth-child(3) {
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  #toggleRange {
+    margin: 8px auto;
+    padding: 6px 12px;
+    font-size: 0.75em;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #537fd3, #2c54a8);
+    color: white;
+    cursor: pointer;
+    max-width: 200px;
+    width: 100%;
+    box-shadow: 0 3px 6px rgba(83,127,211,0.4);
+    user-select: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  #toggleRange:hover {
+    transform: scale(1.05);
+  }
+  #milkChart {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  footer {
+    margin-top: 15px;
+    color: #808080;
+    font-size: 1em;
+  }
 </style>
 </head>
-
 <body>
 
 <h1 id="main-header">🥛MILK TRACKER🐄</h1>
 
-<div id="output">
-  <p>Loading your calcium journey... 🐄🥛</p>
+<div class="card">
+  <div id="output"><p>Loading your calcium journey... 🐄🥛</p></div>
 </div>
 
-<canvas id="milkChart"></canvas>
+<div class="card">
+  <canvas id="milkChart"></canvas>
+</div>
 
-<footer style="margin-top:10px;color:#808080;">
-  <p>made by canon</p>
-</footer>
+<footer><p>made by canon</p></footer>
 
 <script>
-/* ---------- DATE HELPERS ---------- */
-
-// YYYYMMDD → Date
-function parseShortDate(num) {
-  const s = String(num);
-  return new Date(
-    s.slice(0,4),
-    s.slice(4,6) - 1,
-    s.slice(6,8)
-  );
-}
-
-// Date → readable
-function prettyDate(d) {
-  return d.toLocaleDateString('en-US', {
-    year:'numeric', month:'long', day:'numeric'
-  });
-}
-
-/* ---------- DATA LOADING ---------- */
-
-async function fetchBaseMilkData() {
-  try {
-    const r = await fetch('data.json');
-    return await r.json();
-  } catch {
-    return [];
+  function applyDarkModeStyles(isDarkMode) {
+    document.body.classList.toggle('dark', isDarkMode);
   }
-}
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyDarkModeStyles(isDarkMode);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => applyDarkModeStyles(e.matches));
 
-function getURLData() {
-  const p = new URLSearchParams(location.search).get('data');
-  if (!p) return [];
-  try { return JSON.parse(atob(p)); }
-  catch { return []; }
-}
-
-/* ---------- NORMALIZE ---------- */
-/*
- Expects: { "YYYYMMDD": oz }
-*/
-function normalize(entry) {
-  if (!entry || typeof entry !== 'object') return null;
-  const k = Object.keys(entry);
-  if (k.length !== 1) return null;
-
-  const dateNum = k[0];
-  const oz = entry[dateNum];
-
-  if (!/^\d{8}$/.test(dateNum) || typeof oz !== 'number') return null;
-
-  return {
-    date: parseShortDate(dateNum),
-    oz
-  };
-}
-
-/* ---------- MAIN ---------- */
-
-function updatePage(data) {
-  if (!data.length) {
-    output.innerHTML = '<p>No milk data 🐄😕</p>';
-    return;
+  function parseShortDate(str) {
+    const y = Number(str.slice(0,4));
+    const m = Number(str.slice(4,6)) - 1;
+    const d = Number(str.slice(6,8));
+    return new Date(y, m, d);
   }
 
-  data.sort((a,b)=>a.date-b.date);
+  function getURLData() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('data');
+    if (!encoded) return null;
+    try {
+      const parsed = JSON.parse(atob(encoded));
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch { return null; }
+  }
 
-  let totalOz = 0;
-  const labels = [];
-  const cumulative = [];
+  async function fetchBaseMilkData() {
+    try {
+      const r = await fetch('data.json');
+      if (!r.ok) throw new Error();
+      const json = await r.json();
+      return Array.isArray(json) ? json : [];
+    } catch { return []; }
+  }
 
-  data.forEach(e=>{
-    totalOz += e.oz;
-    labels.push(prettyDate(e.date));
-    cumulative.push(totalOz / 128);
-  });
+  function formatDatePretty(date) {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
 
-  const first = data[0].date;
-  const last  = data[data.length-1].date;
-  const days  = Math.max(1, Math.ceil((last-first)/86400000)+1);
-  const avg   = totalOz / days;
+  const comparisons = [
+    gallons => `${(gallons * 3.6).toFixed(1)} light-years of milk molecules 🌌`,
+    gallons => `${(gallons * 3785.41).toFixed(0)} milk ice cubes 🧊`,
+    gallons => `${(gallons / 660000).toFixed(6)} olympic swimming pools 🏊‍♂️`,
+    gallons => `${(gallons / 17.44).toFixed(3)} humans by weight🧍‍♂️`,
+    gallons => `${(gallons / 110).toFixed(3)}% of cow's lifetime production 🐄`,
+    (gallons, totalOz) => `capacity of ${(totalOz / 50).toFixed(0)} human stomachs 🫃`,
+    gallons => `${(gallons*(10/12)).toFixed(1)} feet of stacked gallons 🏗️`,
+    gallons => `$${(gallons*5).toFixed(2)} worth at Fareway 🛒`,
+    gallons => `about ${(gallons * 2400).toFixed(0)} calories consumed 🔥`
+  ];
 
-  output.innerHTML = `
-    <h2>total milk: <span id="milk-total">${(totalOz/128).toFixed(2)}</span> gallons</h2>
-    <p>${totalOz} oz</p>
-    <p>tracking from ${prettyDate(first)} to ${prettyDate(last)}</p>
-    <p>average per day: ${avg.toFixed(2)} oz (${(avg/128).toFixed(2)} gal)</p>
-    <p>latest entry: ${prettyDate(last)} (${data[data.length-1].oz} oz)</p>
-  `;
+  function getRandomComparison(gallons, totalOz) {
+    const idx = Math.floor(Math.random() * comparisons.length);
+    return comparisons[idx](gallons, totalOz);
+  }
 
-  new Chart(milkChart, {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{
-        data:cumulative,
-        borderWidth:2,
-        tension:0.3,
-        pointRadius:2
-      }]
-    },
-    options:{
-      plugins:{ legend:{display:false} },
-      scales:{ y:{ beginAtZero:true, title:{display:true,text:'Gallons'} } }
+  function updatePageContent(milkData) {
+    if (!milkData.length) {
+      document.getElementById('output').innerHTML = '<p>no milk data found 🐄😕</p>';
+      return;
     }
-  });
-}
 
-/* ---------- START ---------- */
+    milkData.sort((a,b)=>parseShortDate(a.d)-parseShortDate(b.d));
 
-(async()=>{
-  const raw = [...await fetchBaseMilkData(), ...getURLData()];
-  const milk = raw.map(normalize).filter(Boolean);
-  updatePage(milk);
-})();
+    let totalOz = 0;
+    let earliest = parseShortDate(milkData[0].d);
+    let latest = parseShortDate(milkData[0].d);
+    const labels = [], cumulative = [];
+
+    milkData.forEach(e=>{
+      const d = parseShortDate(e.d);
+      totalOz += e.o;
+      cumulative.push(totalOz);
+      labels.push(d);
+      if(d<earliest) earliest=d;
+      if(d>latest) latest=d;
+    });
+
+    const totalDays = Math.max(1, Math.ceil((latest - earliest) / 86400000) + 1);
+    const average = totalOz / totalDays;
+    const gallons = totalOz / 128;
+    const comparison = getRandomComparison(gallons, totalOz);
+    const lastEntry = milkData[milkData.length - 1];
+    const gallonPerDay = average / 128;
+    const daysPerGallon = gallonPerDay > 0 ? (1 / gallonPerDay).toFixed(1) : "∞";
+    const ranges = [7,30,90];
+    let currentRangeIndex = 1;
+
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerHTML = `
+      <h2>total milk: <span id="milk-total">0.00</span> gallons</h2>
+      <p>that's about <span id="total-oz">0</span> oz, <span style="color: #666;">OR</span></p>
+      <p id="fact">${comparison}</p>
+      <p>tracking from ${formatDatePretty(earliest)} to ${formatDatePretty(latest)}</p>
+      <p>all-time per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
+      <div id="short-term"></div>
+      <button id="toggleRange">change view: last ${ranges[currentRangeIndex]} days</button>
+      <p>roughly one gallon every <span style="color: var(--blue);" id="days-per-gallon">0.0</span> days</p>
+      <p>latest entry: ${formatDatePretty(parseShortDate(lastEntry.d))} (<span id="latest-oz">${lastEntry.o}</span> oz)</p>
+    `;
+
+    function animateNumber(el, start, end, duration) {
+      let startTime = null;
+      function animate(ts) {
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        el.textContent = (start + (end - start) * progress).toFixed(2);
+        if (progress < 1) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animateNumber(document.getElementById('milk-total'), 0, gallons, 1200);
+    animateNumber(document.getElementById('total-oz'), 0, totalOz, 1200);
+    animateNumber(document.getElementById('milk-avg'), 0, average, 1200);
+    animateNumber(document.getElementById('milk-avg-gal'), 0, average/128, 1200);
+    document.getElementById('days-per-gallon').textContent = daysPerGallon;
+
+    const shortTermDiv = document.getElementById('short-term');
+    function updateShortTermStats() {
+      const daysBack = ranges[currentRangeIndex];
+      const sinceDate = new Date(latest);
+      sinceDate.setDate(sinceDate.getDate() - (daysBack - 1));
+      const recent = milkData.filter(e => parseShortDate(e.d) >= sinceDate);
+      const recentTotal = recent.reduce((sum, e) => sum + e.o, 0);
+      const recentDays = Math.max(1, Math.ceil((latest - sinceDate) / 86400000) + 1);
+      const recentAvg = recentTotal / recentDays;
+      const trend = recentAvg > average ? '⬆️' : recentAvg < average ? '⬇️' : '➡️';
+      shortTermDiv.innerHTML = `<p>last ${daysBack} days ${trend}: <span style="color: var(--accent-green);">${recentAvg.toFixed(2)} oz, ${(recentAvg/128).toFixed(2)} gallons</span></p>`;
+    }
+    updateShortTermStats();
+
+    document.getElementById('toggleRange').onclick = () => {
+      currentRangeIndex = (currentRangeIndex + 1) % ranges.length;
+      document.getElementById('toggleRange').innerText = `change view: last ${ranges[currentRangeIndex]} days`;
+      updateShortTermStats();
+    };
+
+    new Chart(document.getElementById('milkChart'), {
+      type: 'line',
+      data: {
+        labels: labels.map(d => formatDatePretty(d)),
+        datasets: [{
+          label: 'The Journey',
+          data: cumulative.map(oz => oz / 128),
+          borderColor: '#6495ed',
+          backgroundColor: 'rgba(100,149,237,0.15)',
+          borderWidth: 7,
+          pointRadius: 0,
+          tension: 0.25
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 1200, easing: 'easeOutQuart' },
+        scales: {
+          x: {
+            ticks: {
+              callback: function(value, index, ticks) {
+                return (index === 0 || index === ticks.length - 1) ? this.getLabelForValue(value) : '';
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Gallons' }
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  (async function() {
+    const baseData = await fetchBaseMilkData();
+    const urlData = getURLData();
+    const combined = [...baseData];
+    if (urlData && Array.isArray(urlData)) {
+      urlData.forEach(entry => {
+        if (entry.d && typeof entry.o === 'number') combined.push(entry);
+      });
+    }
+    updatePageContent(combined);
+  })();
 </script>
 
-<div style="position:fixed;bottom:0;left:0;width:100%;">
-  <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" style="width:100%;">
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 1000; pointer-events: none; user-select: none;">
+  <img src="https://pngimg.com/uploads/milk/milk_PNG12722.png" alt="Milk Splash" style="width: 100%; height: auto;" />
 </div>
 
 </body>
