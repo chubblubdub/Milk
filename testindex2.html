@@ -76,13 +76,14 @@
   applyDarkModeStyles(isDarkMode);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => applyDarkModeStyles(e.matches));
 
-  // ✅ Correct parsing for d: "YYYYMMDD"
   function parseShortDate(str) {
-    const y = Number(str.slice(0,4));
-    const m = Number(str.slice(4,6)) - 1;
-    const d = Number(str.slice(6,8));
-    return new Date(y,m,d);
-  }
+  if (typeof str !== 'string' || str.length !== 8) return null;
+  const y = parseInt(str.slice(0,4), 10);
+  const m = parseInt(str.slice(4,6), 10) - 1; // 0-indexed month
+  const d = parseInt(str.slice(6,8), 10);
+  const date = new Date(y, m, d);
+  return isNaN(date.getTime()) ? null : date;
+ }
 
   function getURLData() {
     const params = new URLSearchParams(window.location.search);
@@ -125,13 +126,14 @@
     const labels=[], cumulative=[];
 
     milkData.forEach(e=>{
-      const d=parseShortDate(e.d);
-      totalOz+=e.o;
+      const d = parseShortDate(e.d);
+      if (!d) return; // skip invalid
+      totalOz += e.o;
       cumulative.push(totalOz);
       labels.push(d);
-      if(d<earliest) earliest=d;
-      if(d>latest) latest=d;
-    });
+      if(d < earliest) earliest = d;
+      if(d > latest) latest = d;
+     });
 
     const totalDays=Math.max(1,Math.ceil((latest-earliest)/86400000)+1);
     const average=totalOz/totalDays;
