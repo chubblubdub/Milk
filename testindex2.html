@@ -263,17 +263,37 @@
     document.getElementById('days-per-gallon').textContent = daysPerGallon;
 
     const shortTermDiv = document.getElementById('short-term');
+    
     function updateShortTermStats() {
       const daysBack = ranges[currentRangeIndex];
       const sinceDate = new Date(latest);
       sinceDate.setDate(sinceDate.getDate() - (daysBack - 1));
+
       const recent = validMilkData.filter(e => e.dateObj >= sinceDate);
       const recentTotal = recent.reduce((sum, e) => sum + e.o, 0);
       const recentDays = Math.max(1, Math.ceil((latest - sinceDate) / 86400000) + 1);
-      const recentAvg = recentTotal / recentDays;
-      const trend = recentAvg > average ? '⬆️' : recentAvg < average ? '⬇️' : '➡️';
-      shortTermDiv.innerHTML = `<p>last ${daysBack} days ${trend}: <span style="color: var(--accent-green);">${recentAvg.toFixed(2)} oz, ${(recentAvg/128).toFixed(2)} gallons</span></p>`;
+
+      const recentAvg = recentTotal / recentDays; // oz/day
+      const recentGallonsPerDay = recentAvg / 128;
+      const recentDaysPerGallon =
+        recentGallonsPerDay > 0 ? (1 / recentGallonsPerDay).toFixed(1) : "∞";
+
+      const trend =
+        recentAvg > average ? '⬆️' :
+        recentAvg < average ? '⬇️' : '➡️';
+
+      shortTermDiv.innerHTML = `
+        <p>last ${daysBack} days ${trend}:
+          <span style="color: var(--accent-green);">
+            ${recentAvg.toFixed(2)} oz, ${(recentAvg/128).toFixed(2)} gallons
+          </span>
+        </p>
+      `;
+
+      // 🔹 update days-per-gallon dynamically
+      document.getElementById('days-per-gallon').textContent = recentDaysPerGallon;
     }
+
     updateShortTermStats();
 
     document.getElementById('toggleRange').onclick = () => {
