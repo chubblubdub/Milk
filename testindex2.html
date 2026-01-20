@@ -224,6 +224,8 @@
 
     const totalDays = Math.max(1, Math.ceil((latest - earliest) / 86400000) + 1);
     const average = totalOz / totalDays;
+    const allTimeDaysPerGallon =
+      average > 0 ? (128 / average).toFixed(1) : "∞";
     const gallons = totalOz / 128;
     const comparison = getRandomComparison(gallons, totalOz);
     const lastEntry = validMilkData[validMilkData.length - 1];
@@ -241,7 +243,7 @@
       <p>all-time per day: <span style="color: var(--blue);" id="milk-avg">0.00</span> oz, <span id="milk-avg-gal">0.00</span> gallons</p>
       <div id="short-term"></div>
       <button id="toggleRange">change view: last ${ranges[currentRangeIndex]} days</button>
-      <p>roughly one gallon every <span style="color: var(--blue);" id="days-per-gallon">0.0</span> days</p>
+      <p>one gallon every <span style="color: var(--blue);" id="days-per-gallon">0.0</span> days</p>
       <p>latest entry: ${formatDatePretty(lastEntry.dateObj)} (<span id="latest-oz">${lastEntry.o}</span> oz)</p>
     `;
 
@@ -290,8 +292,8 @@
         </p>
       `;
 
-      // 🔹 update days-per-gallon dynamically
-      document.getElementById('days-per-gallon').textContent = recentDaysPerGallon;
+      document.getElementById('days-per-gallon').textContent =
+        `${recentDaysPerGallon} (${allTimeDaysPerGallon} all-time)`;
     }
 
     updateShortTermStats();
