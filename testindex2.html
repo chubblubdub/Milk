@@ -115,7 +115,7 @@
 <h1 id="main-header">🥛MILK TRACKER🐄</h1>
 
 <div class="card">
-  <div id="output"><p>Loading your calcium journey... 🐄🥛</p></div>
+  <div id="output"><p>Loading 🥛...</p></div>
 </div>
 
 <div class="card">
@@ -201,7 +201,7 @@
       .filter(e => e.dateObj !== null);
 
     if (!validMilkData.length) {
-      document.getElementById('output').innerHTML = '<p>no milk data found 🐄😕</p>';
+      document.getElementById('output').innerHTML = '<p>no data for you😕</p>';
       return;
     }
 
@@ -291,7 +291,7 @@
           data: cumulative.map(oz => oz / 128),
           borderColor: '#6495ed',
           backgroundColor: 'rgba(100,149,237,0.15)',
-          borderWidth: 7,
+          borderWidth: 3,
           pointRadius: 0,
           tension: 0.25
         }]
