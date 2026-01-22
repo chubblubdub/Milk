@@ -345,7 +345,9 @@
     const combined = [...baseData];
     if (urlData && Array.isArray(urlData)) {
       urlData.forEach(entry => {
-        if (entry.d && typeof entry.o === 'number') combined.push(entry);
+        if (entry.d && !isNaN(entry.o)) {
+           combined.push({ d: entry.d, o: Number(entry.o) });
+        }
       });
     }
     updatePageContent(combined);
